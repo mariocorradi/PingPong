@@ -11,6 +11,7 @@ public:
 	bool Run();
 private:
 	void Start();
+	SDL_Texture* loadTexture(std::string path);
 
 	const int SCREEN_WIDTH;
 	const int SCREEN_HEIGHT;
