@@ -20,5 +20,8 @@ private:
 	SDL_Window* _Window;
 
 	SDL_Renderer* _WindowRenderer;
+
+	SDL_Texture* cursoreMouse=nullptr;
+	SDL_Texture* cursoriMouse[8];
 };
 

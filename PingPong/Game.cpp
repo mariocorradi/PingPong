@@ -118,6 +118,8 @@ bool Game::Run()
 
 		//Update screen
 		SDL_RenderPresent(_WindowRenderer);
+		//Cursore non si vede
+		
 		//std::getchar();
 	}
 
