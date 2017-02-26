@@ -6,7 +6,7 @@ using namespace std;
 Game::Game(int screen_Width, int screen_Height)
 	: SCREEN_WIDTH(screen_Width)
 	, SCREEN_HEIGHT(screen_Height)
-	
+
 {
 	_Window = NULL;
 	_WindowRenderer = NULL;
@@ -40,7 +40,9 @@ void Game::Start()
 		}
 		else
 		{
-			_WindowRenderer = SDL_CreateRenderer(_Window, -1, SDL_RENDERER_ACCELERATED);
+			//Per il Sync 
+			_WindowRenderer = SDL_CreateRenderer(_Window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+			
 			if (_WindowRenderer == NULL)
 			{
 				cout << "Renderer could not be created! SDL Error:" << SDL_GetError();
@@ -62,7 +64,8 @@ void Game::Start()
 			}
 			//Setto il backGround
 			_Background = loadTexture("Assets/background.png");
-			_playerPaddle = make_shared<Paddle>(_WindowRenderer, 14, 60, 14, 60);
+			//16 sarebbe il top del background
+			_playerPaddle = make_shared<Paddle>(_WindowRenderer, 0, 160 - 30, 14, 60, SCREEN_WIDTH, SCREEN_HEIGHT);
 		}
 	}
 	catch (const std::exception&)
@@ -116,17 +119,31 @@ bool Game::Run()
 			{
 				quit = true;
 			}
+			_playerPaddle->HandleInput(e);
 		}
-
+		_playerPaddle->Move();
 		//Clear screen
 		SDL_RenderClear(_WindowRenderer);
 		//Render del background
 		//Render texture to screen
-		SDL_RenderCopy(_WindowRenderer, _Background, NULL, NULL);
-		
+		SDL_Rect SrcR;
+		SDL_Rect DestR;
+
+		SrcR.x = 0;
+		SrcR.y = 0;
+		SrcR.w = SCREEN_WIDTH;
+		SrcR.h = SCREEN_HEIGHT;
+
+		DestR.x = 0;
+		DestR.y = 0;
+		DestR.w = SCREEN_WIDTH;
+		DestR.h = SCREEN_HEIGHT;
+
+		SDL_RenderCopy(_WindowRenderer, _Background, &SrcR, &DestR);
+
 		//Player paddle 
-		_playerPaddle->Render();
-		
+		_playerPaddle->Render(_playerPaddle->PosX(), _playerPaddle->PosY());
+
 		//Update screen
 		SDL_RenderPresent(_WindowRenderer);
 		//Cursore non si vede

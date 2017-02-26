@@ -4,7 +4,7 @@
 int main(int argc, char* args[])
 {
 	
-	 auto gameLoop = std::make_shared<Game>(800,600);
+	 auto gameLoop = std::make_shared<Game>(480,320);
 	
 	 //puntatore
 	 
