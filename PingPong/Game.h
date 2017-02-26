@@ -1,8 +1,9 @@
 #pragma once
-
+#include "paddle.h"
 #include <SDL.h>
 #include <SDL_image.h>
 #include <iostream>
+#include <memory>
 class Game
 {
 public:
@@ -21,7 +22,8 @@ private:
 
 	SDL_Renderer* _WindowRenderer;
 
-	SDL_Texture* cursoreMouse=nullptr;
-	SDL_Texture* cursoriMouse[8];
+	SDL_Texture* _Background;
+	
+	std::shared_ptr<Paddle> _playerPaddle;
 };
 

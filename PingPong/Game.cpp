@@ -1,13 +1,17 @@
 #include "Game.h"
+
 using namespace std;
 
 
 Game::Game(int screen_Width, int screen_Height)
 	: SCREEN_WIDTH(screen_Width)
 	, SCREEN_HEIGHT(screen_Height)
+	
 {
 	_Window = NULL;
 	_WindowRenderer = NULL;
+	Start();
+
 }
 
 Game::~Game()
@@ -29,7 +33,7 @@ void Game::Start()
 	try
 	{
 		SDL_Init(SDL_INIT_VIDEO);
-		_Window = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+		_Window = SDL_CreateWindow("Ping Pong", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 		if (_Window == NULL)
 		{
 			cout << "Errore nella CreateWindow: " << SDL_GetError();
@@ -54,7 +58,11 @@ void Game::Start()
 					cout << "SDL_image could not initialize! SDL_image Error: " << IMG_GetError();
 
 				}
+
 			}
+			//Setto il backGround
+			_Background = loadTexture("Assets/background.png");
+			_playerPaddle = make_shared<Paddle>(_WindowRenderer, 14, 60, 14, 60);
 		}
 	}
 	catch (const std::exception&)
@@ -112,14 +120,17 @@ bool Game::Run()
 
 		//Clear screen
 		SDL_RenderClear(_WindowRenderer);
-
+		//Render del background
 		//Render texture to screen
-		//SDL_RenderCopy(_WindowRenderer, gTexture, NULL, NULL);
-
+		SDL_RenderCopy(_WindowRenderer, _Background, NULL, NULL);
+		
+		//Player paddle 
+		_playerPaddle->Render();
+		
 		//Update screen
 		SDL_RenderPresent(_WindowRenderer);
 		//Cursore non si vede
-		
+
 		//std::getchar();
 	}
 

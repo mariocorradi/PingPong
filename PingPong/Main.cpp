@@ -3,7 +3,7 @@
 
 int main(int argc, char* args[])
 {
-	 Game g(800, 640);
+	
 	 auto gameLoop = std::make_shared<Game>(800,600);
 	
 	 //puntatore
