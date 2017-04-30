@@ -2,46 +2,37 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <iostream>
-class Paddle
+#include "LTexture.h"
+class Paddle :public LTexture
+
 {
 public:
 
-	Paddle(SDL_Renderer* renderer, int x, int y, int w, int h,int gameWIDTH,int gameHeight);
+	Paddle(SDL_Renderer* renderer, int x, int y, int w, int h, int gameWIDTH, int gameHeight, bool Ai,int velocity);
 	~Paddle();
+
 	void SetImage(SDL_Texture * texture);
-	void Render(int x, int y);
-	int GetHeight();
-	int GetWidth();
+
+	int GetHeight() const;
+	int GetWidth() const;
 	int PosY();
 	int PosX();
-	
+	//Position Ball
+	void Ai(int direction, int y);
 	//Gestisce gli input del paddle
 	void HandleInput(SDL_Event &event);
-	void Move();
-
+	SDL_Rect * GetCollisionPaddle();
 private:
-	SDL_Texture* loadTexture(std::string path);
-	//Windows renderer
-	SDL_Renderer* _WindowRenderer;
-	//Texture per il paddle
-	SDL_Texture* _Texture;
-
-
-	//Per le inizializzazioni
-	void Init();
+	SDL_Rect _CollisionPaddle[3];
 	//Funzione per controllare se la racchetta esce sulle Y
 	bool InsideScreenY();
 	//Funzione per controllare se la racchetta esce sulle Y
 	bool InsideScreenX();
-	//Position
-	int _positionX, _positionY;
-	//Sprite altezza larghezza
-	int _width, _height;
+
 	//Velocita su x e y
 	int _VelX, _VelY;
-
-	int _GameWidth, _GameHeight;
-
-	static const int PADDLE_VEL = 10;
+	int _paddleWidth;
+	bool _Ai;
+	int PADDLE_VEL;
 };
 

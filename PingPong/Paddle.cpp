@@ -1,35 +1,30 @@
 #include "Paddle.h"
+#include <stdio.h>
+using namespace std;
+
 /*
 x sarebbe la posizione e y
 w e h la grandezza
 */
-Paddle::Paddle(SDL_Renderer* renderer, int x, int y, int w, int h, int gameWIDTH, int gameHeight) :
-	_WindowRenderer(renderer),
-	_positionX(x),
-	_positionY(y),
-	_width(w),
-	_height(h),
+Paddle::Paddle(SDL_Renderer* renderer, int x, int y, int w, int h, int gameWIDTH, int gameHeight, bool Ai, int velocity) :
+	LTexture(renderer, x, y, w, h, gameWIDTH, gameHeight),
 	_VelX(0),
 	_VelY(0),
-	_GameWidth(gameWIDTH),
-	_GameHeight(gameHeight)
+	_paddleWidth(w),
+	_Ai(Ai),
+	PADDLE_VEL(velocity)
 {
-	Init();
 
-	_Texture = loadTexture("Assets/paddle.png");
+	_VelY = PADDLE_VEL;
+	loadFromFile("Assets/paddle.png");
 }
 
 //Da rivedere
 Paddle::~Paddle()
 {
-
-	SDL_DestroyTexture(_Texture);
-	_Texture = NULL;
-	_width = 0;
-	_height = 0;
-	//Quit SDL subsystems
-	IMG_Quit();
-
+	free();
+	_VelY = 0;
+	PADDLE_VEL = 0;
 }
 
 void Paddle::SetImage(SDL_Texture *texture)
@@ -37,42 +32,47 @@ void Paddle::SetImage(SDL_Texture *texture)
 	_Texture = texture;
 }
 
-void Paddle::Render(int x, int y)
+int Paddle::GetHeight() const
 {
-	SDL_Rect SrcR;
-	SrcR.x = 0;
-	SrcR.y = 0;
-	SrcR.w = _width;
-	SrcR.h = _height;
-
-	SDL_Rect Dest;
-	Dest.x = x;
-	Dest.y = y;
-	Dest.w = _width;
-	Dest.h = _height;
-
-
-	SDL_RenderCopy(_WindowRenderer, _Texture, &SrcR, &Dest);
+	return LTexture::GetHeight();
 }
 
-int Paddle::GetHeight()
+int Paddle::GetWidth() const
 {
-	return _height;
-}
-
-int Paddle::GetWidth()
-{
-	return _width;
+	return LTexture::GetWidth();
 }
 
 int Paddle::PosY()
 {
-	return _positionY;
+	return LTexture::PosY();
 }
 
 int Paddle::PosX()
 {
-	return _positionX;
+	return LTexture::PosX();
+}
+
+void Paddle::Ai(int direction, int y)
+{
+	if (direction < 0)
+	{
+		if (_PositionY > _GameHeight / 2 - _Height / 2)
+			_PositionY -= _VelY;
+		else if (_PositionY < _GameHeight / 2 - _Height / 2)
+		{
+			_PositionY += _VelY;
+		}
+	}
+	else {
+		if (_PositionY > y)
+		{
+			_PositionY -= _VelY;
+		}
+		else if (_PositionY < y)
+		{
+			_PositionY += _VelY;
+		}
+	}
 }
 
 void Paddle::HandleInput(SDL_Event &event)
@@ -84,25 +84,27 @@ void Paddle::HandleInput(SDL_Event &event)
 		switch (event.key.keysym.sym)
 		{
 		case SDLK_UP:
-			_positionY -= PADDLE_VEL;
-			if(!InsideScreenY())
-				_positionY += PADDLE_VEL;
+			/*cout << "Posizione Y Prima Up" << _PositionY << "\n";*/
+			_PositionY -= _VelY;
+			/*cout << "Posizione Y" << _PositionY << "\n";*/
+			if (!InsideScreenY())
+				_PositionY += _VelY;
 			break;
 		case SDLK_DOWN:
-			_positionY += PADDLE_VEL;
+			_PositionY += _VelY;
 			if (!InsideScreenY())
-				_positionY -= PADDLE_VEL;
+				_PositionY -= _VelY;
 			break;
-		case SDLK_LEFT:
-			_positionX -= PADDLE_VEL;
-			if (!InsideScreenX())
-				_positionX += PADDLE_VEL;
-			break;
-		case SDLK_RIGHT:
-			_positionX += PADDLE_VEL;
-			if (!InsideScreenX())
-				_positionX -= PADDLE_VEL;
-			break;
+			/*	case SDLK_LEFT:
+					_PositionX -= PADDLE_VEL;
+					if (!InsideScreenX())
+						_PositionX += PADDLE_VEL;
+					break;
+				case SDLK_RIGHT:
+					_PositionX += PADDLE_VEL;
+					if (!InsideScreenX())
+						_PositionX -= PADDLE_VEL;
+					break;*/
 		}
 	}
 
@@ -124,73 +126,25 @@ void Paddle::HandleInput(SDL_Event &event)
 	//}
 }
 
-void Paddle::Move()
+SDL_Rect * Paddle::GetCollisionPaddle()
 {
-	//Muovo la racchetta X
-	_positionX += _VelX;
-	if ((_positionX < 0) || _positionX + _width > _GameWidth)
-	{
-		_positionX -= _VelX;
-	}
-
-	//Muovo la racchetta Y
-	_positionY -= _VelY;
-	if ((_positionY < 16) || (_positionY + _height) > (_GameHeight - _height / 2))
-	{
-		_positionY -= _VelY;
-	}
-}
-
-SDL_Texture * Paddle::loadTexture(std::string path)
-{
-
-	//The final texture
-	SDL_Texture* newTexture = NULL;
-
-	//Load image at specified path
-	SDL_Surface* loadedSurface = IMG_Load(path.c_str());
-	if (loadedSurface == NULL)
-	{
-		printf("Unable to load image %s! SDL_image Error: %s\n", path.c_str(), IMG_GetError());
-	}
-	else
-	{
-		//Create texture from surface pixels
-		newTexture = SDL_CreateTextureFromSurface(_WindowRenderer, loadedSurface);
-		if (newTexture == NULL)
-		{
-			printf("Unable to create texture from %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
-		}
-
-		//Get rid of old loaded surface
-		SDL_FreeSurface(loadedSurface);
-	}
-
-	return newTexture;
-
-}
-
-void Paddle::Init()
-{
-	int imgFlags = IMG_INIT_PNG;
-	if (!(IMG_Init(imgFlags) & imgFlags))
-	{
-		std::cout << "SDL_image could not initialize! SDL_image Error: " << IMG_GetError();
-
-	}
+	_CollisionPaddle[0] = { _PositionX,_PositionY,_paddleWidth,_Height / 3 };
+	_CollisionPaddle[1] = { _PositionX,_PositionY + _Height / 3,_paddleWidth,_Height / 3 };
+	_CollisionPaddle[2] = { _PositionX,_PositionY + (_Height / 3) * 2,_paddleWidth,_Height / 3 };
+	return _CollisionPaddle;
 }
 
 bool Paddle::InsideScreenY()
 {
 
-	if (_positionY<16 || _positionY + _height > _GameHeight-16)
+	if (_PositionY<16 || _PositionY + _Height > _GameHeight - 16)
 		return false;
 	return true;
 }
 
 bool Paddle::InsideScreenX()
 {
-	if (_positionX<0 || _positionX + _width > _GameWidth/2)
+	if (_PositionX<0 || _PositionX + _Width > _GameWidth / 2)
 		return false;
 	return true;
 }

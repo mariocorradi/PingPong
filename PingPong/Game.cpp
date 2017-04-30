@@ -42,7 +42,7 @@ void Game::Start()
 		{
 			//Per il Sync 
 			_WindowRenderer = SDL_CreateRenderer(_Window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-			
+
 			if (_WindowRenderer == NULL)
 			{
 				cout << "Renderer could not be created! SDL Error:" << SDL_GetError();
@@ -65,7 +65,10 @@ void Game::Start()
 			//Setto il backGround
 			_Background = loadTexture("Assets/background.png");
 			//16 sarebbe il top del background
-			_playerPaddle = make_shared<Paddle>(_WindowRenderer, 0, 160 - 30, 14, 60, SCREEN_WIDTH, SCREEN_HEIGHT);
+			_playerPaddle = make_shared<Paddle>(_WindowRenderer, 0, 160 - 30, 12, 60, SCREEN_WIDTH, SCREEN_HEIGHT, false, 4);
+			_AiPaddle = make_shared<Paddle>(_WindowRenderer, SCREEN_WIDTH - 16, 160 - 30, 12, 60, SCREEN_WIDTH, SCREEN_HEIGHT, true, 2);
+
+			_Ball = make_shared<Ball>(_WindowRenderer, SCREEN_WIDTH / 2 - 8, SCREEN_HEIGHT / 2 - 8, 14, 14, SCREEN_WIDTH, SCREEN_HEIGHT, 5);
 		}
 	}
 	catch (const std::exception&)
@@ -106,11 +109,13 @@ SDL_Texture * Game::loadTexture(std::string path)
 bool Game::Run()
 {
 	bool quit = false;
+	bool win = false;
 	SDL_Event e;
 
 	//While application is running
 	while (!quit)
 	{
+
 		//Handle events on queue
 		while (SDL_PollEvent(&e) != 0)
 		{
@@ -121,32 +126,56 @@ bool Game::Run()
 			}
 			_playerPaddle->HandleInput(e);
 		}
-		_playerPaddle->Move();
-		//Clear screen
-		SDL_RenderClear(_WindowRenderer);
-		//Render del background
-		//Render texture to screen
-		SDL_Rect SrcR;
-		SDL_Rect DestR;
+		if (!win || quit)
+		{
 
-		SrcR.x = 0;
-		SrcR.y = 0;
-		SrcR.w = SCREEN_WIDTH;
-		SrcR.h = SCREEN_HEIGHT;
+			//Move the paddle
 
-		DestR.x = 0;
-		DestR.y = 0;
-		DestR.w = SCREEN_WIDTH;
-		DestR.h = SCREEN_HEIGHT;
+			//Move the ball
+			//_Ball->CheckCollision(_playerPaddle->GetCollisionRect());
+			_Ball->CheckCollision(_playerPaddle->GetCollisionPaddle(), _AiPaddle->GetCollisionPaddle());
 
-		SDL_RenderCopy(_WindowRenderer, _Background, &SrcR, &DestR);
+			_Ball->Move();
+			_AiPaddle->Ai(_Ball->Direction(), _Ball->PosY());
+			//Clear screen
+			SDL_RenderClear(_WindowRenderer);
+			//Render del background
+			//Render texture to screen
+			SDL_Rect SrcR;
+			SDL_Rect DestR;
 
-		//Player paddle 
-		_playerPaddle->Render(_playerPaddle->PosX(), _playerPaddle->PosY());
+			SrcR.x = 0;
+			SrcR.y = 0;
+			SrcR.w = SCREEN_WIDTH;
+			SrcR.h = SCREEN_HEIGHT;
 
-		//Update screen
-		SDL_RenderPresent(_WindowRenderer);
-		//Cursore non si vede
+			DestR.x = 0;
+			DestR.y = 0;
+			DestR.w = SCREEN_WIDTH;
+			DestR.h = SCREEN_HEIGHT;
+
+			SDL_RenderCopy(_WindowRenderer, _Background, &SrcR, &DestR);
+			//Ball Render
+			_Ball->Render(_Ball->PosX(), _Ball->PosY());
+
+			//Player Render 
+			_playerPaddle->Render(_playerPaddle->PosX(), _playerPaddle->PosY());
+			_AiPaddle->Render(_AiPaddle->PosX(), _AiPaddle->PosY());
+			win = _Ball->CheckIFSomeoneWin();
+			if (win)
+			{
+				_Ball->RenderText(SCREEN_WIDTH / 2 - _Ball->GetTextWidth(_Ball->Score1) / 2, SCREEN_HEIGHT / 2 - _Ball->GetTextHeight(_Ball->Score1) / 2, _Ball->GetTextureTTF(_Ball->Score1));
+			}
+			else {
+
+				_Ball->RenderText(0, 16, _Ball->GetTextureTTF(_Ball->Score1));
+				_Ball->RenderText(SCREEN_WIDTH - 16, 16, _Ball->GetTextureTTF(_Ball->Score2));
+			}
+			//Update screen
+			SDL_RenderPresent(_WindowRenderer);
+			//Cursore non si vede
+		}
+
 
 		//std::getchar();
 	}

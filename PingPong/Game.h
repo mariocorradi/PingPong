@@ -1,5 +1,6 @@
 #pragma once
-#include "paddle.h"
+#include "Paddle.h"
+#include "Ball.h"
 #include <SDL.h>
 #include <SDL_image.h>
 #include <iostream>
@@ -10,6 +11,7 @@ public:
 	Game(int screen_Width, int screen_Height);
 	virtual ~Game();
 	bool Run();
+
 private:
 	void Start();
 	SDL_Texture* loadTexture(std::string path);
@@ -25,5 +27,7 @@ private:
 	SDL_Texture* _Background;
 	
 	std::shared_ptr<Paddle> _playerPaddle;
+	std::shared_ptr<Paddle> _AiPaddle;
+	std::shared_ptr<Ball> _Ball;
 };
 
